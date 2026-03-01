@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/profile_field_tile.dart';
 
 // Pantalla de perfil que recibe datos desde RegisterScreen
 class ProfileScreen extends StatelessWidget {
@@ -49,9 +50,17 @@ Widget build(BuildContext context) {
 
               const SizedBox(height: 8),
 
-              // Información adicional del usuario
-              Text(correo),
-              Text(telefono),
+              // Reutilizamos widget personalizado para mostrar campos del perfil
+              ProfileFieldTile(
+                icon: Icons.email,
+                label: 'Correo',
+                value: correo,
+              ),
+              ProfileFieldTile(
+                icon: Icons.phone,
+                label: 'Teléfono',
+                value: telefono,
+              ),
             ],
           ),
         ),
