@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../database/database_helper.dart';
+import 'profile_screen.dart';
 
 // Pantalla de registro convertida a StatefulWidget
 // porque necesitamos manejar estado (formulario y validaciones)
@@ -28,12 +30,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   // Método que se ejecuta al presionar "Guardar"
-  void _submit() {
+   Future<void> _submit() async {
     // Ejecuta todas las validaciones del formulario
     if (_formKey.currentState!.validate()) {
-      // Si todo es válido, mostramos confirmación (luego aquí irá SQLite)
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Formulario válido ✅')),
+      // Inserta el usuario en SQLite usando el DatabaseHelper
+      await DatabaseHelper.instance.insertUser(
+        nombre: _nameCtrl.text.trim(),
+        correo: _emailCtrl.text.trim(),
+        telefono: _phoneCtrl.text.trim(),
+      );
+
+      // Confirmación visual para el usuario
+      if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Usuario guardado en SQLite ✅')),
+      );
+      // Navegación a la pantalla de perfil
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+         builder: (context) => ProfileScreen(
+          nombre: _nameCtrl.text.trim(),
+          correo: _emailCtrl.text.trim(),
+          telefono: _phoneCtrl.text.trim(),
+         ),
+        ),
       );
     }
   }
