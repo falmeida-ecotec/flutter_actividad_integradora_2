@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../database/database_helper.dart';
 import 'profile_screen.dart';
+import '../widgets/custom_text_field.dart';
 
 // Pantalla de registro convertida a StatefulWidget
 // porque necesitamos manejar estado (formulario y validaciones)
@@ -70,69 +71,53 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             children: [
               // Campo: Nombre
-              TextFormField(
+              CustomTextField(
                 controller: _nameCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Nombre',
-                  border: OutlineInputBorder(),
-                ),
+                label: 'Nombre',
+                keyboardType: TextInputType.text,
                 validator: (value) {
-                  // Validación básica de nombre
                   if (value == null || value.trim().isEmpty) {
-                    return 'El nombre es obligatorio';
-                  }
+                  return 'El nombre es obligatorio';
+                }
                   if (value.trim().length < 3) {
-                    return 'Mínimo 3 caracteres';
-                  }
+                  return 'Mínimo 3 caracteres';
+                }
                   return null;
                 },
               ),
-
               const SizedBox(height: 12),
 
               // Campo: Correo
-              TextFormField(
+              CustomTextField(
                 controller: _emailCtrl,
+                label: 'Correo',
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'Correo',
-                  border: OutlineInputBorder(),
-                ),
                 validator: (value) {
                   final email = value?.trim() ?? '';
-
-                  // Validación básica de formato
                   if (email.isEmpty) return 'El correo es obligatorio';
                   if (!email.contains('@') || !email.contains('.')) {
-                    return 'Correo no válido';
-                  }
+                  return 'Correo no válido';
+                }
                   return null;
                 },
               ),
-
               const SizedBox(height: 12),
 
               // Campo: Teléfono
-              TextFormField(
+              CustomTextField(
                 controller: _phoneCtrl,
+                label: 'Teléfono',
                 keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'Teléfono',
-                  border: OutlineInputBorder(),
-                ),
                 validator: (value) {
                   final phone = value?.trim() ?? '';
-
-                  // Validaciones: requerido, longitud y solo números
                   if (phone.isEmpty) return 'El teléfono es obligatorio';
                   if (phone.length < 8) return 'Mínimo 8 dígitos';
                   if (!RegExp(r'^\d+$').hasMatch(phone)) {
-                    return 'Solo números';
-                  }
+                  return 'Solo números';
+                }
                   return null;
                 },
               ),
-
               const SizedBox(height: 16),
 
               // Botón de envío del formulario
