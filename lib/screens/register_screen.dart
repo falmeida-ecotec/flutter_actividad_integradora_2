@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../database/database_helper.dart';
+import 'profile_screen.dart';
+import '../widgets/custom_text_field.dart';
 
 // Pantalla de registro convertida a StatefulWidget
 // porque necesitamos manejar estado (formulario y validaciones)
@@ -10,6 +13,8 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  // Guarda el último usuario encontrado en la BD (si existe)
+  Map<String, dynamic>? _lastUser;
   // Clave global para validar el formulario completo
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -17,6 +22,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _nameCtrl = TextEditingController();
   final TextEditingController _emailCtrl = TextEditingController();
   final TextEditingController _phoneCtrl = TextEditingController();
+
+  @override
+void initState() {
+  super.initState();
+  _loadLastUser();
+}
+
+// Carga el último usuario guardado en SQLite al iniciar la pantalla
+Future<void> _loadLastUser() async {
+  final user = await DatabaseHelper.instance.getLastUser();
+
+  if (!mounted) return;
+  setState(() {
+    _lastUser = user;
+  });
+}
 
   @override
   void dispose() {
@@ -28,12 +49,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   // Método que se ejecuta al presionar "Guardar"
-  void _submit() {
+   Future<void> _submit() async {
     // Ejecuta todas las validaciones del formulario
     if (_formKey.currentState!.validate()) {
-      // Si todo es válido, mostramos confirmación (luego aquí irá SQLite)
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Formulario válido ✅')),
+      // Inserta el usuario en SQLite usando el DatabaseHelper
+      await DatabaseHelper.instance.insertUser(
+        nombre: _nameCtrl.text.trim(),
+        correo: _emailCtrl.text.trim(),
+        telefono: _phoneCtrl.text.trim(),
+      );
+
+      // Confirmación visual para el usuario
+      if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Usuario guardado en SQLite ✅')),
+      );
+      // Navegación a la pantalla de perfil
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+         builder: (context) => ProfileScreen(
+          nombre: _nameCtrl.text.trim(),
+          correo: _emailCtrl.text.trim(),
+          telefono: _phoneCtrl.text.trim(),
+         ),
+        ),
       );
     }
   }
@@ -49,69 +89,53 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             children: [
               // Campo: Nombre
-              TextFormField(
+              CustomTextField(
                 controller: _nameCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Nombre',
-                  border: OutlineInputBorder(),
-                ),
+                label: 'Nombre',
+                keyboardType: TextInputType.text,
                 validator: (value) {
-                  // Validación básica de nombre
                   if (value == null || value.trim().isEmpty) {
-                    return 'El nombre es obligatorio';
-                  }
+                  return 'El nombre es obligatorio';
+                }
                   if (value.trim().length < 3) {
-                    return 'Mínimo 3 caracteres';
-                  }
+                  return 'Mínimo 3 caracteres';
+                }
                   return null;
                 },
               ),
-
               const SizedBox(height: 12),
 
               // Campo: Correo
-              TextFormField(
+              CustomTextField(
                 controller: _emailCtrl,
+                label: 'Correo',
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'Correo',
-                  border: OutlineInputBorder(),
-                ),
                 validator: (value) {
                   final email = value?.trim() ?? '';
-
-                  // Validación básica de formato
                   if (email.isEmpty) return 'El correo es obligatorio';
                   if (!email.contains('@') || !email.contains('.')) {
-                    return 'Correo no válido';
-                  }
+                  return 'Correo no válido';
+                }
                   return null;
                 },
               ),
-
               const SizedBox(height: 12),
 
               // Campo: Teléfono
-              TextFormField(
+              CustomTextField(
                 controller: _phoneCtrl,
+                label: 'Teléfono',
                 keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'Teléfono',
-                  border: OutlineInputBorder(),
-                ),
                 validator: (value) {
                   final phone = value?.trim() ?? '';
-
-                  // Validaciones: requerido, longitud y solo números
                   if (phone.isEmpty) return 'El teléfono es obligatorio';
                   if (phone.length < 8) return 'Mínimo 8 dígitos';
                   if (!RegExp(r'^\d+$').hasMatch(phone)) {
-                    return 'Solo números';
-                  }
+                  return 'Solo números';
+                }
                   return null;
                 },
               ),
-
               const SizedBox(height: 16),
 
               // Botón de envío del formulario
@@ -120,6 +144,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: ElevatedButton(
                   onPressed: _submit, // Ejecuta validación
                   child: const Text('Guardar'),
+                ),
+              ),
+                const SizedBox(height: 12),
+                    if (_lastUser != null)
+                      SizedBox(
+                      width: double.infinity,
+                        child: OutlinedButton.icon(
+                        icon: const Icon(Icons.person_search),
+                        label: const Text('Ver último usuario guardado'),
+                        onPressed: () {
+                      Navigator.push(
+                        context,
+                      MaterialPageRoute(
+                        builder: (context) => ProfileScreen(
+                        nombre: _lastUser!['nombre'] as String,
+                        correo: _lastUser!['correo'] as String,
+                        telefono: _lastUser!['telefono'] as String,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
