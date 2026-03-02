@@ -13,6 +13,8 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  // Guarda el último usuario encontrado en la BD (si existe)
+  Map<String, dynamic>? _lastUser;
   // Clave global para validar el formulario completo
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -20,6 +22,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _nameCtrl = TextEditingController();
   final TextEditingController _emailCtrl = TextEditingController();
   final TextEditingController _phoneCtrl = TextEditingController();
+
+  @override
+void initState() {
+  super.initState();
+  _loadLastUser();
+}
+
+// Carga el último usuario guardado en SQLite al iniciar la pantalla
+Future<void> _loadLastUser() async {
+  final user = await DatabaseHelper.instance.getLastUser();
+
+  if (!mounted) return;
+  setState(() {
+    _lastUser = user;
+  });
+}
 
   @override
   void dispose() {
@@ -126,6 +144,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: ElevatedButton(
                   onPressed: _submit, // Ejecuta validación
                   child: const Text('Guardar'),
+                ),
+              ),
+                const SizedBox(height: 12),
+                    if (_lastUser != null)
+                      SizedBox(
+                      width: double.infinity,
+                        child: OutlinedButton.icon(
+                        icon: const Icon(Icons.person_search),
+                        label: const Text('Ver último usuario guardado'),
+                        onPressed: () {
+                      Navigator.push(
+                        context,
+                      MaterialPageRoute(
+                        builder: (context) => ProfileScreen(
+                        nombre: _lastUser!['nombre'] as String,
+                        correo: _lastUser!['correo'] as String,
+                        telefono: _lastUser!['telefono'] as String,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
